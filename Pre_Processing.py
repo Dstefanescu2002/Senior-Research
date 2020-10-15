@@ -3,7 +3,7 @@
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
-from Dominant_Color import kmeans
+from K_Means import kmeans
 
 def colorThresholding(image, numCenters):
     """Detects the field of a image of a soccer game using k-means and color thresholding
@@ -56,7 +56,7 @@ def contouring(opened_mask):
     """
     thresh = cv2.cvtColor(opened_mask, cv2.COLOR_BGR2GRAY)
     contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE) #Find contours
-    contourImage = cv2.drawContours(thresh, contours, -1, (0,0,255), 3) #Draws them on origional image
+    contourImage = cv2.drawContours(opened_mask, contours, -1, (0,0,255), 3) #Draws them on origional image
     return (contours, contourImage)
 
 def crop(image, contours, cushion):
@@ -65,7 +65,7 @@ def crop(image, contours, cushion):
     Args:
         image (Image): Image to be cropped
         contours (List): List of contours 
-        cushion (Integer): Desired cushion around 
+        cushion (Integer): Desired cushion around field
 
     Returns:
         Image: Cropped image
