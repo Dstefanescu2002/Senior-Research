@@ -16,12 +16,15 @@ def colorThresholding(image, numCenters):
         Image: Black and white mask for where the field was found
     """
     kmeansImage, centers = kmeans(image,numCenters)
-    #cv2.imshow("Kmeans image", kmeansImage)
+    cv2.imshow("Kmeans image", kmeansImage)
+    centers = [(int(x[0]),int(x[1]),int(x[2])) for x in centers]
     tempValues = [x[1]-x[0]-x[2] for x in centers]
+    print (tempValues)
     gp = centers[tempValues.index(max(tempValues))]
+    print (gp)
 
-    lower_color_bounds = (int(gp[0])-1, int(gp[1])-1, int(gp[2])-1)
-    upper_color_bounds = (int(gp[0])+1, int(gp[1])+1, int(gp[2])+1)
+    lower_color_bounds = (int(gp[0])-4, int(gp[1])-4, int(gp[2])-4)
+    upper_color_bounds = (int(gp[0])+4, int(gp[1])+4, int(gp[2])+4)
 
     blur = cv2.GaussianBlur(kmeansImage, (15, 15), 10)
     mask = cv2.inRange(blur, lower_color_bounds, upper_color_bounds)
@@ -39,7 +42,7 @@ def kernel(mask_rgb, image):
     Returns:
         Tuple: (Black and white mask after kerneling, RGB mask after kerneling using mask and image)
     """
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15)) #Learn this too
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (25, 25)) #Learn this too
     opened_mask = cv2.morphologyEx(mask_rgb, cv2.MORPH_OPEN, kernel) #IDK learn what this does
     thresh_color = image & opened_mask #Runs a bitwise and
     return (opened_mask, thresh_color)
@@ -70,6 +73,8 @@ def crop(image, contours, cushion):
     Returns:
         Image: Cropped image
     """
+    if not contours:
+        return image
     xVals = []
     yVals = []
     for cont in contours:
@@ -93,8 +98,22 @@ def edgeDetection(image):
         Image: Black and white edges image
     """
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) 
+    #gray_filtered = cv2.bilateralFilter(gray, 7, 50, 50)
     edgesBW = cv2.Canny(gray, 100, 200)
     return (edgesBW)
+
+def averageColor(image):
+    h = image.shape[0]
+    w = image.shape[1]
+    rgb = [0,0,0]
+    num = h*w
+    
+    for y in range(0, h):
+        for x in range(0, w):
+            pix = image[y,x]
+            rgb = [rgb[0]+pix[0], rgb[1]+pix[1], rgb[2]+pix[2]]
+    return ([rgb[0]/num, rgb[1]/num, rgb[2]/num])
+            
 
 def findFieldContours(image, numCenters):
     """Finds field using colorThresholding, kernel, and contouring
@@ -106,11 +125,25 @@ def findFieldContours(image, numCenters):
     Returns:
         Tuple: (Contours giving location of field, RGB mask of field)
     """
+    numCenters = 3
+    avColor = averageColor(image)
+    if (avColor[1]-((avColor[2]+avColor[0])/2) >= 20 and avColor[1]>=120):
+        numCenters = 2
     #cv2.imshow("Origional", image)
     CTImage = colorThresholding(image,numCenters)
     #cv2.imshow("Color Thresholded Image", CTImage)
     openedMask, kernalColorImage = kernel(CTImage, image)
     #cv2.imshow("Black and White mask", openedMask)
     #cv2.imshow("Colored image after kerneling", kernalColorImage)
+    kern = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (100, 100))
+    closing = cv2.morphologyEx(openedMask, cv2.MORPH_CLOSE, kern)
+    kern2 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (40, 40))
+    gradient = cv2.morphologyEx(closing, cv2.MORPH_GRADIENT, kern2)
+    expanded = gradient | closing
+    test = expanded & image
+    outline = edgeDetection(expanded)
+    cv2.imshow("Bruh", test)
+    cv2.imwrite("Final_Image.jpg", test) 
+
     contours, contouredImage = contouring(openedMask)
-    return (contours, kernalColorImage)
+    return (contours, kernalColorImage, test, outline)
