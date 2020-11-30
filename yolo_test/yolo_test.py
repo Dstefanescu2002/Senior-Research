@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 import sys
 
-image = cv2.imread('Final_Image.jpg')
+image = cv2.imread('bruh2.jpg')
+image = cv2.resize(image, (1000, 800))
 
 classes = None
 with open('coco.names', 'r') as f:
@@ -53,10 +54,10 @@ indices = cv2.dnn.NMSBoxes(boxes, confidences, 0.1, 0.1)
 for i in indices:
     i = i[0]
     box = boxes[i]
-    if class_ids[i]==0 or class_ids[i]==32: #if it detected a person
-        label = str(classes[class_ids[i]]) 
-        cv2.rectangle(image, (round(box[0]),round(box[1])), (round(box[0]+box[2]),round(box[1]+box[3])), (0, 0, 255), 2)
-        cv2.putText(image, label, (round(box[0])-10,round(box[1])-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+    #if class_ids[i]==0 or class_ids[i]==32: #if it detected a person
+    label = str(classes[class_ids[i]]) 
+    cv2.rectangle(image, (round(box[0]),round(box[1])), (round(box[0]+box[2]),round(box[1]+box[3])), (0, 0, 255), 2)
+    cv2.putText(image, label, (round(box[0])-10,round(box[1])-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
 cv2.imshow("yuh", image)
 cv2.waitKey(0)

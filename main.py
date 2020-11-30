@@ -18,7 +18,7 @@ def auto_canny(image, sigma=0.33):
 imageURL = "images/mid.jpg"
 image = cv2.imread(imageURL)
 #image = cv2.resize(image, (900, 600))
-cv2.imshow("origional", image)
+#cv2.imshow("origional", image)
 
 
 #cv2.imshow("Contoured kerneled image", contouredImage)
@@ -29,21 +29,21 @@ croppedImage = crop(image, fieldMask[0], 15)
 #cv2.imshow("Second field finder 2",findFieldContours(croppedImage,3)[1])
 #cv2.imshow("cropped image", croppedImage)
 edgeImage = edgeDetection(croppedImage)
-cv2.imshow("Final Image", edgeImage)
+#cv2.imshow("Final Image", edgeImage)
 
 temp = cv2.cvtColor(fieldMask[2], cv2.COLOR_BGR2HSV)
-cv2.imshow("Temp", temp)
+#cv2.imshow("Temp", temp)
 
 median = cv2.medianBlur(fieldMask[2],5)
-cv2.imshow("Median", median)
+#cv2.imshow("Median", median)
 
 autoCannyTest = auto_canny(fieldMask[2])
 #autoCannyTestFinal = autoCannyTest ^ fieldMask[3]
-cv2.imshow("Auto Canny Test", autoCannyTest)
+#cv2.imshow("Auto Canny Test", autoCannyTest)
 
 edgeTest = edgeDetection(fieldMask[2])
 edgeTestFinal = edgeTest ^ fieldMask[3]
-cv2.imshow("Final edge test 2", edgeTestFinal)
+#cv2.imshow("Final edge test 2", edgeTestFinal)
 #contouredImage = contouring(croppedImage)
 #cv2.imshow("Final Contoured Image", contouredImage[1])
 #print (contouredImage[0])

@@ -16,7 +16,7 @@ def colorThresholding(image, numCenters):
         Image: Black and white mask for where the field was found
     """
     kmeansImage, centers = kmeans(image,numCenters)
-    cv2.imshow("Kmeans image", kmeansImage)
+    #cv2.imshow("Kmeans image", kmeansImage)
     centers = [(int(x[0]),int(x[1]),int(x[2])) for x in centers]
     tempValues = [x[1]-x[0]-x[2] for x in centers]
     print (tempValues)
@@ -144,6 +144,15 @@ def findFieldContours(image, numCenters):
     outline = edgeDetection(expanded)
     cv2.imshow("Bruh", test)
     cv2.imwrite("Final_Image.jpg", test) 
+
+    lower_color_bounds = (100, 100, 100)
+    upper_color_bounds = (255,255,255)
+
+    #cv2.imshow("origional2 ", croppedImage)
+    filtered = cv2.bilateralFilter(test, 7, 50, 50)
+    cv2.imshow("testFinal", filtered) 
+    mask = cv2.inRange(filtered, lower_color_bounds, upper_color_bounds)
+    cv2.imshow("lines", mask)
 
     contours, contouredImage = contouring(openedMask)
     return (contours, kernalColorImage, test, outline)
