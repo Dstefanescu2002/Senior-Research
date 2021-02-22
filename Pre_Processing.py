@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 from K_Means import kmeans
+import math
 
 def colorThresholding(image, numCenters):
     """Detects the field of a image of a soccer game using k-means and color thresholding
@@ -19,9 +20,7 @@ def colorThresholding(image, numCenters):
     #cv2.imshow("Kmeans image", kmeansImage)
     centers = [(int(x[0]),int(x[1]),int(x[2])) for x in centers]
     tempValues = [x[1]-x[0]-x[2] for x in centers]
-    print (tempValues)
     gp = centers[tempValues.index(max(tempValues))]
-    print (gp)
 
     lower_color_bounds = (int(gp[0])-4, int(gp[1])-4, int(gp[2])-4)
     upper_color_bounds = (int(gp[0])+4, int(gp[1])+4, int(gp[2])+4)
@@ -115,44 +114,28 @@ def averageColor(image):
     return ([rgb[0]/num, rgb[1]/num, rgb[2]/num])
             
 
-def findFieldContours(image, numCenters):
-    """Finds field using colorThresholding, kernel, and contouring
+def preprocess(image, numCenters):
+    """Runs all preprocessing algorithms
 
     Args:
         image (Image): Image to be processed
         numCenters (Integer): Number of desired centers for k-means
 
     Returns:
-        Tuple: (Contours giving location of field, RGB mask of field)
+        Tuple: (image cropped for players, image cropped for lines)
     """
     numCenters = 3
     avColor = averageColor(image)
     if (avColor[1]-((avColor[2]+avColor[0])/2) >= 20 and avColor[1]>=120):
         numCenters = 2
-    #cv2.imshow("Origional", image)
     CTImage = colorThresholding(image,numCenters)
-    #cv2.imshow("Color Thresholded Image", CTImage)
     openedMask, kernalColorImage = kernel(CTImage, image)
-    #cv2.imshow("Black and White mask", openedMask)
-    #cv2.imshow("Colored image after kerneling", kernalColorImage)
     kern = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (100, 100))
     closing = cv2.morphologyEx(openedMask, cv2.MORPH_CLOSE, kern)
     kern2 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (40, 40))
     gradient = cv2.morphologyEx(closing, cv2.MORPH_GRADIENT, kern2)
-    expanded = gradient | closing
-    test = expanded & image
-    outline = edgeDetection(expanded)
-    cv2.imshow("Bruh", test)
-    cv2.imwrite("Final_Image.jpg", test) 
+    finalPlayerMask = gradient | closing
+    finalPlayerImage = finalPlayerMask & image
+    finalLineImage = closing & image
 
-    lower_color_bounds = (100, 100, 100)
-    upper_color_bounds = (255,255,255)
-
-    #cv2.imshow("origional2 ", croppedImage)
-    filtered = cv2.bilateralFilter(test, 7, 50, 50)
-    cv2.imshow("testFinal", filtered) 
-    mask = cv2.inRange(filtered, lower_color_bounds, upper_color_bounds)
-    cv2.imshow("lines", mask)
-
-    contours, contouredImage = contouring(openedMask)
-    return (contours, kernalColorImage, test, outline)
+    return (finalPlayerImage, finalLineImage)
